@@ -11,9 +11,10 @@ def event_stream():
     processed_files = set()
     while True:
         if os.path.exists(RAW_PATH):
-            # FIXED: Changed json.listdir to os.listdir to resolve target module crash
+            # FIXED: Swapped out the incorrect json.listdir call for the native os module function
             current_files = set(os.listdir(RAW_PATH))
             new_files = current_files - processed_files
+            
             for f in new_files:
                 if not f.endswith('.tmp'):
                     data = {"file": f, "time": datetime.now().strftime('%H:%M:%S')}
@@ -59,4 +60,5 @@ def stream():
     return Response(event_stream(), mimetype="text/event-stream")
 
 if __name__ == "__main__":
+    # Binds perfectly to local interface loopback on port 8887
     app.run(host="127.0.0.1", port=8887)
