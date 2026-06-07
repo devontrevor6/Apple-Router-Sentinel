@@ -1,0 +1,3 @@
+FINAL_SUBMISSION_PROOF/swan_event.log
+FINAL_SUBMISSION_PROOF/sovereign_probe.c
+FINAL_SUBMISSION_PROOF/Sovereign_Victory.log
