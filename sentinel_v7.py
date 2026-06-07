@@ -12,14 +12,12 @@ def get_vault_data():
         "Comms": {"label": "ENCRYPTED COMMS", "files": [], "size": 0},
         "Intel": {"label": "GATHERED INTEL", "files": [], "size": 0}
     }
-    
+
     if os.path.exists(VAULT_PATH):
         for f in os.listdir(VAULT_PATH):
             path = os.path.join(VAULT_PATH, f)
             if os.path.isfile(path):
-                size = os.path.getsize(path) / 1024 # Size in KB
-                
-                # Simplified Sorting Logic based on file keywords
+                size = os.path.getsize(path) / 1024  # Size in KB
                 f_lower = f.lower()
                 if "net" in f_lower:
                     cat = "Network"
@@ -27,7 +25,7 @@ def get_vault_data():
                     cat = "Comms"
                 else:
                     cat = "Intel"
-                    
+
                 categories[cat]["files"].append({"name": f, "size": round(size, 2)})
                 categories[cat]["size"] += size
     return categories
@@ -55,7 +53,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
         <hr style="background: #00ff41;">
         <p>STATUS: STEADY STREAM ACTIVE | SYSTEM: ARMED</p>
-        
+
         <div class="accordion" id="sntlMenu">
             {% for id, cat in data.items() %}
             <div class="accordion-item">
@@ -95,7 +93,6 @@ def reset_dms():
     os.makedirs(os.path.dirname(CHECKIN_FILE), exist_ok=True)
     with open(CHECKIN_FILE, "w") as f:
         f.write(datetime.now().isoformat())
-    # FIXED: Replaced raw string output with a clean loop redirect back to home dashboard
     return redirect('/')
 
 if __name__ == "__main__":
