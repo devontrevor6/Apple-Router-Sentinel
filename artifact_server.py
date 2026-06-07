@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, send_from_directory, make_response
+from flask import Flask, render_template_string, send_from_directory
 import os
 
 app = Flask(__name__)
@@ -30,7 +30,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 def index():
     files = []
     if os.path.exists(VAULT_PATH):
-        files = [f for f in os.listdir(VAULT_PATH) if os.path.isfile(os.path.join(VAULT_PATH, f))]
+        files = [f for f in os.listdir(VAULT_PATH) if os.path.isfile(os.path.join(VAULT_PATH, f)) and not f.startswith('.')]
     return render_template_string(HTML_TEMPLATE, files=files)
 
 @app.route('/download/<filename>')
