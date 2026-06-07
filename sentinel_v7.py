@@ -1,10 +1,74 @@
-from flask import Flask, render_template_string, redirect
 import os
+import time
 from datetime import datetime
+from flask import Flask, render_template_string, redirect
 
 app = Flask(__name__)
+
 VAULT_PATH = os.path.expanduser("~/Apple-Router-Sentinel/artifacts")
-CHECKIN_FILE = os.path.expanduser("~/Apple-Router-Sentinel/artifacts/.last_checkin")
+CHECKIN_FILE = os.path.expanduser("~/Apple-Router-Sentinel/.dms_checkin")
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html>
+<head>
+    <title>SENTINEL DASHBOARD</title>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
+        h1, h2 { color: #ffffff; text-shadow: 0 0 5px #00ff41; }
+        .accordion { background-color: #111; color: #00ff41; cursor: pointer; padding: 15px; width: 100%; border: 1px solid #333; text-align: left; font-weight: bold; margin-top: 5px; font-family: monospace; }
+        .active, .accordion:hover { background-color: #222; border-color: #00ff41; }
+        .panel { padding: 0 18px; display: none; background-color: #0a0a0a; border: 1px solid #222; border-top: none; overflow: hidden; }
+        ul { list-style-type: square; margin: 10px 0; }
+        li { margin: 5px 0; }
+        a { color: #33ff33; text-decoration: none; }
+        a:hover { text-decoration: underline; text-shadow: 0 0 3px #33ff33; }
+        .btn { background: #111; color: #ff3333; border: 1px solid #ff3333; padding: 10px 20px; cursor: pointer; font-family: monospace; font-weight: bold; }
+        .btn:hover { background: #ff3333; color: #000; }
+    </style>
+</head>
+<body>
+    <h1>SNTL TELEMETRY CORE</h1>
+    <hr style="border-color: #333;">
+    
+    <h2>ARCHIVE VAULT STORAGE</h2>
+    {% for cat_id, cat in data.items() %}
+        <button class="accordion">{{ cat.label }} ({{ cat.size }} bytes)</button>
+        <div class="panel">
+            {% if cat.files %}
+                <ul>
+                {% for file in cat.files %}
+                    <li><a href="http://127.0.0.1:8886/download/{{ file }}">{{ file }}</a></li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: #666; font-style: italic;">No telemetry assets indexed.</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+    
+    <br><br>
+    <h2>DEAD MAN'S SWITCH</h2>
+    <form action="/reset_dms" method="POST" style="display: inline;">
+        <button type="submit" class="btn">RESET INTERVAL TIMESTAMP</button>
+    </form>
+
+    <script>
+        var acc = document.getElementsByClassName("accordion");
+        for (var i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+"""
 
 def get_vault_data():
     categories = {
@@ -16,79 +80,27 @@ def get_vault_data():
     if os.path.exists(VAULT_PATH):
         for f in os.listdir(VAULT_PATH):
             path = os.path.join(VAULT_PATH, f)
-            if os.path.isfile(path):
-                size = os.path.getsize(path) / 1024  # Size in KB
-                f_lower = f.lower()
-                if "net" in f_lower:
-                    cat = "Network"
-                elif "msg" in f_lower or "comm" in f_lower:
-                    cat = "Comms"
+            if os.path.isfile(path) and not f.startswith('.'):
+                filename_lower = f.lower()
+                f_size = os.path.getsize(path)
+                
+                if "network" in filename_lower or "matrix" in filename_lower or "block" in filename_lower:
+                    categories["Network"]["files"].append(f)
+                    categories["Network"]["size"] += f_size
+                elif "proof" in filename_lower or "report" in filename_lower or "intel" in filename_lower:
+                    categories["Intel"]["files"].append(f)
+                    categories["Intel"]["size"] += f_size
                 else:
-                    cat = "Intel"
-
-                categories[cat]["files"].append({"name": f, "size": round(size, 2)})
-                categories[cat]["size"] += size
+                    categories["Comms"]["files"].append(f)
+                    categories["Comms"]["size"] += f_size
+                    
     return categories
-
-HTML_TEMPLATE = """<!DOCTYPE html>
-<html>
-<head>
-    <title>SNTL COMMAND v7</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: #000; color: #00ff41; font-family: 'Courier New', monospace; }
-        .container { margin-top: 30px; border: 1px solid #00ff41; padding: 20px; background: #050505; }
-        .btn-dms { border: 1px solid #ff0000; color: #ff0000; background: transparent; }
-        .btn-dms:hover { background: #ff0000; color: #000; }
-        .accordion-item { background: #111; border: 1px solid #00ff41; margin-bottom: 10px; }
-        .accordion-button { background: #001100; color: #00ff41; font-family: 'Courier New', monospace; }
-        .accordion-button:not(.collapsed) { background: #002200; color: #00ff41; border-bottom: 1px solid #00ff41; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2>SENTINEL COMMAND v7.0</h2>
-            <button onclick="location.href='/reset_dms'" class="btn btn-dms">RESET INTEGRITY DEADLINE</button>
-        </div>
-        <hr style="background: #00ff41;">
-        <p>STATUS: STEADY STREAM ACTIVE | SYSTEM: ARMED</p>
-
-        <div class="accordion" id="sntlMenu">
-            {% for id, cat in data.items() %}
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{id}}">
-                        {{ cat.label }} ({% if cat.size > 1024 %}{{ (cat.size/1024)|round(2) }} MB{% else %}{{ cat.size|round(2) }} KB{% endif %})
-                    </button>
-                </h2>
-                <div id="{{id}}" class="accordion-collapse collapse" data-bs-parent="#sntlMenu">
-                    <div class="accordion-body">
-                        {% if cat.files %}
-                            {% for file in cat.files %}
-                                <div class="p-2 border-bottom border-secondary d-flex justify-content-between">
-                                    <span><strong>FILE:</strong> {{ file.name }}</span>
-                                    <span><strong>SIZE:</strong> {{ file.size }} KB</span>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted">No files archived in this category yet.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>"""
 
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE, data=get_vault_data())
 
-@app.route('/reset_dms')
+@app.route('/reset_dms', methods=['POST'])
 def reset_dms():
     os.makedirs(os.path.dirname(CHECKIN_FILE), exist_ok=True)
     with open(CHECKIN_FILE, "w") as f:
