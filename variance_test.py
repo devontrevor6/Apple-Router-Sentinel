@@ -1,34 +1,24 @@
 import time
 import statistics
 
-def standard_operation():
-    total = 0
-    for i in range(1000):
-        total += i
-    return total
+def check_variance():
+    print("\033[94m[*] Initializing Thread Latency Variance Test...\033[0m")
+    samples = []
 
-def run_variance_test(iterations=100):
-    durations = []
-    print(f"Starting baseline test over {iterations} iterations...")
-    
-    for _ in range(iterations):
-        start_time = time.perf_counter()
-        standard_operation()
-        end_time = time.perf_counter()
-        elapsed = end_time - start_time
-        durations.append(elapsed)
-
-    avg_duration = statistics.mean(durations)
-    min_duration = min(durations)
-    max_duration = max(durations)
-    std_dev = statistics.stdev(durations)
-
-    print("\n=== Baseline Results ===")
-    print(f"Average Execution Time : {avg_duration:.9f} seconds")
-    print(f"Minimum Execution Time : {min_duration:.9f} seconds")
-    print(f"Maximum Execution Time : {max_duration:.9f} seconds")
-    print(f"Standard Deviation     : {std_dev:.9f} seconds")
-    print("=========================")
+    for _ in range(100):
+        t0 = time.perf_counter_ns()
+        _ = [i**2 for i in range(100)]
+        t1 = time.perf_counter_ns()
+        samples.append(t1 - t0)
+        time.sleep(0.01)
+        
+    avg_latency = sum(samples) / len(samples)
+    v_jerk = statistics.variance(samples) if len(samples) > 1 else 0
+    print("-" * 50)
+    print(f"Total Samples Collected: {len(samples)}")
+    print(f"Average Execution Time : {avg_latency:.2f} ns")
+    print(f"Jitter Variance Profile: {v_jerk:.2f}")
+    print("-" * 50)
 
 if __name__ == "__main__":
-    run_variance_test()
+    check_variance()
