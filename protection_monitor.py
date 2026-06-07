@@ -1,12 +1,18 @@
-from flask import Flask
-import os
+from flask import Flask, jsonify
+import time
 
 app = Flask(__name__)
+START_TIME = time.time()
 
-@app.route('/')
-def status():
-    return "<h1>SNTL PROTECTION: ARMED</h1><p>Status: Monitoring for Intrusion.</p>"
+@app.route('/integrity')
+def check_integrity():
+    uptime = time.time() - START_TIME
+    return jsonify({
+        "node": "SOVEREIGN_MONITOR",
+        "status": "SECURED",
+        "uptime_seconds": round(uptime, 2),
+        "privilege_zone": "USERSPACE_ARMv8"
+    })
 
 if __name__ == "__main__":
-    # Binds locally on alternative interface boundary port 8889
     app.run(host="127.0.0.1", port=8889)

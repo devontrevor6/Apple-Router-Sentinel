@@ -17,7 +17,7 @@ def get_vault_data():
         for f in os.listdir(VAULT_PATH):
             path = os.path.join(VAULT_PATH, f)
             if os.path.isfile(path) and not f.startswith('.'):
-                size = os.path.getsize(path) / 1024  # KB
+                size = os.path.getsize(path) / 1024
                 f_lower = f.lower()
                 if "net" in f_lower or "matrix" in f_lower:
                     cat = "Network"

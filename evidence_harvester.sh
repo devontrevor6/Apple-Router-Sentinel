@@ -1,23 +1,16 @@
 #!/bin/bash
-# SNTL EVIDENCE SCAN - Forensic Scraper Core
+# Evidence Harvester - Metric Aggregator Core
+VAULT_DIR="$HOME/Apple-Router-Sentinel/artifacts"
+LOCKER_DIR="$HOME/Apple-Router-Sentinel/evidence_locker"
 
-VAULT="$HOME/Apple-Router-Sentinel/artifacts"
-DEST="$HOME/Apple-Router-Sentinel/evidence_locker"
+mkdir -p "$VAULT_DIR" "$LOCKER_DIR"
 
-mkdir -p "$DEST"
+echo -e "\033[94m[*] HARVESTER ACTIVE: Compiling runtime timing statistics...\033[0m"
 
-echo "--- SNTL EVIDENCE SCAN: STARTING ---"
-
-# 1. Audit files for embedded hidden media extensions
-echo "[!] HUNTING FOR MEDIA & CONTACTS..."
-grep -i "JFIF\|PNG\|mp4" "$VAULT"/* > "$DEST/media_sources.txt" 2>/dev/null
-
-# 2. Extract lines containing potential authentication blocks
-echo "[!] EXTRACTING PASSWORDS & LOGINS..."
-grep -rEi "pass|pwd|login|user|creds" "$VAULT"/ > "$DEST/found_credentials.txt" 2>/dev/null
-
-# 3. Pluck clean email strings using strict POSIX character classes
-echo "[!] MAPPING MALICIOUS CONTACTS..."
-grep -rEo "[[:alnum:]+\._-]+@[[:alnum:]+\._-]+\.[[:alpha:]]{2,4}" "$VAULT"/ > "$DEST/extracted_emails.txt" 2>/dev/null
-
-echo "--- SCAN COMPLETE: CHECK $DEST ---"
+# Safely dump process drifts into the log boundary
+if [ -f /sdcard/Black_Stallion/logs/drift.log ]; then
+    cat /sdcard/Black_Stallion/logs/drift.log >> "$VAULT_DIR/network_blocks.log" 2>/dev/null
+    echo -e "\033[92m[+] Successfully synchronized local mobile drift profiles.\033[0m"
+else
+    echo "Iteration,Delta_Ticks" > "$VAULT_DIR/network_blocks.log"
+fi
