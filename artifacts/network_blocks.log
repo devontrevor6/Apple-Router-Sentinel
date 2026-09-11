@@ -1,0 +1,10 @@
+04/13/2026 12:29:46 - BLOCKED: 51.105.71.136 (Process: ActionsServer) on Port: 443
+04/13/2026 12:29:49 - BLOCKED: 52.123.130.14 (Process: ) on Port: 443
+04/13/2026 12:29:50 - BLOCKED: 192.168.12.10 (Process: nmap) on Port: 2000
+04/13/2026 12:29:50 - BLOCKED: 192.168.12.11 (Process: ) on Port: 2000
+04/13/2026 12:29:51 - BLOCKED: 192.168.12.12 (Process: ) on Port: 2000
+04/13/2026 12:29:51 - BLOCKED: 192.168.12.13 (Process: ) on Port: 2000
+04/13/2026 12:29:52 - BLOCKED: 192.168.12.14 (Process: ) on Port: 2000
+04/13/2026 12:31:20 - BLOCKED: 192.178.155.102 (Process: msedge) on Port: 443
+04/13/2026 12:31:22 - BLOCKED: 216.239.32.181 (Process: msedge) on Port: 443
+04/13/2026 12:31:26 - BLOCKED: 23.215.0.6 (Process: msedge) on Port: 443
